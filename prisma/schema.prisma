@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String       @id @default(cuid())
+  primaryEmail  String       @unique
+  emailVerified DateTime?
+  lastLogin     DateTime?
+  createdAt     DateTime     @default(now())
+  groups        MedicationGroup[]
+  accessGranted UserAccess[] @relation("GrantedAccess")
+  accessOwned   UserAccess[] @relation("OwnedAccess")
+}
+
+model UserAccess {
+  id           String     @id @default(cuid())
+  owner        User       @relation("OwnedAccess", fields: [ownerId], references: [id])
+  ownerId      String
+  grantedUser  User?      @relation("GrantedAccess", fields: [grantedUserId], references: [id])
+  grantedUserId String?
+  email        String
+  status       String     // PENDING, ACTIVE, REVOKED
+  invitedAt    DateTime   @default(now())
+  acceptedAt   DateTime?
+  revokedAt    DateTime?
+}
+
+model MedicationGroup {
+  id           String       @id @default(cuid())
+  name         String
+  color        String
+  icon         String
+  userId       String
+  displayOrder Int
+  user         User         @relation(fields: [userId], references: [id])
+  medications  Medication[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Medication {
+  id                 String       @id @default(cuid())
+  name               String
+  groupId            String
+  group              MedicationGroup @relation(fields: [groupId], references: [id])
+  dosage             String
+  unit               String
+  frequency          String
+  isAsNeeded         Boolean      @default(false)
+  minTimeBetweenDoses Int?        // In minutes
+  lastTakenAt        DateTime?
+  doseRecords        DoseRecord[]
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+}
+
+model DoseRecord {
+  id             String     @id @default(cuid())
+  medicationId   String
+  medication     Medication @relation(fields: [medicationId], references: [id])
+  timestamp      DateTime
+  notes          String?
+  skipped        Boolean    @default(false)
+  recordedByUserId String
+  createdAt      DateTime   @default(now())
+}
