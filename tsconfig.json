@@ -22,7 +22,7 @@
       "@/*": ["./*"]
     },
     "typeRoots": ["./node_modules/@types", "./types"],
-    "types": ["node", "react", "react-dom", "next-auth"]
+    "types": ["node", "react", "react-dom", "next-auth", "jest"]
   },
   "include": [
     "next-env.d.ts",

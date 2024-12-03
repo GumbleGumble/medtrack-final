@@ -3,11 +3,12 @@ import { ToastActionElement } from '@radix-ui/react-toast'
 
 export interface ToastProps {
   id?: string
-  title?: string
-  description?: string
+  title?: ReactNode
+  description?: ReactNode
   action?: ToastActionElement
   variant?: 'default' | 'destructive'
   className?: string
+  duration?: number
 }
 
 export interface Toast extends ToastProps {

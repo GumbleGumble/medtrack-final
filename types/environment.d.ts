@@ -9,5 +9,7 @@ declare namespace NodeJS {
     EMAIL_FROM: string
     DATABASE_URL: string
     NODE_ENV: 'development' | 'production' | 'test'
+    SENTRY_DSN?: string
+    SENTRY_AUTH_TOKEN?: string
   }
 } 

@@ -3,11 +3,16 @@ import { prisma } from "@/lib/prisma"
 import { NextAuthOptions, Session, User } from "next-auth"
 import EmailProvider from "next-auth/providers/email"
 import { Adapter, AdapterUser } from "next-auth/adapters"
-import { createTransport } from "nodemailer"
+import { createTransport, TransportOptions } from "nodemailer"
 
 interface VerificationRequest {
   identifier: string
   url: string
+  token?: string
+  provider?: {
+    server: TransportOptions
+    from: string
+  }
 }
 
 interface UserData extends Partial<AdapterUser> {
@@ -28,19 +33,20 @@ interface EmailServerConfig {
 interface EmailParams {
   identifier: string
   url: string
-  token: string
 }
 
-const transporter = createTransport({
+const emailConfig = {
   host: process.env.EMAIL_SERVER_HOST,
   port: Number(process.env.EMAIL_SERVER_PORT),
   auth: {
     user: process.env.EMAIL_SERVER_USER!,
     pass: process.env.EMAIL_SERVER_PASSWORD!,
-  } as EmailServerConfig['auth']
-})
+  },
+} as TransportOptions
 
-const customAdapter = {
+const transporter = createTransport(emailConfig)
+
+const customAdapter: Adapter = {
   ...PrismaAdapter(prisma),
   createUser: async (data: UserData): Promise<AdapterUser> => {
     const user = await prisma.user.create({
@@ -59,30 +65,24 @@ const customAdapter = {
       }
     })
     
-    return {
+    const adapterUser: AdapterUser = {
       id: user.id,
       email: user.primaryEmail,
       emailVerified: user.emailVerified,
       name: user.name
-    } as AdapterUser
+    }
+
+    return adapterUser
   }
-} as Adapter
+}
 
 export const authOptions: NextAuthOptions = {
   adapter: customAdapter,
   providers: [
     EmailProvider({
-      server: {
-        host: process.env.EMAIL_SERVER_HOST!,
-        port: Number(process.env.EMAIL_SERVER_PORT),
-        auth: {
-          user: process.env.EMAIL_SERVER_USER!,
-          pass: process.env.EMAIL_SERVER_PASSWORD!,
-        },
-      },
+      server: emailConfig,
       from: process.env.EMAIL_FROM!,
-      async sendVerificationRequest(params: VerificationRequest): Promise<void> {
-        const { identifier, url } = params
+      async sendVerificationRequest({ identifier, url }: EmailParams): Promise<void> {
         try {
           await transporter.sendMail({
             to: identifier,
