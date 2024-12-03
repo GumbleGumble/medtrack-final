@@ -1,49 +1,35 @@
 # MedTrack
 
-A comprehensive medication tracking application built with Next.js 14, TypeScript, and Prisma.
+A modern medication tracking application built with Next.js 14, featuring a beautiful UI and comprehensive medication management features.
 
 ## Features
 
-- 💊 **Medication Management**
-  - Add, edit, and delete medications
-  - Track doses with timestamps
-  - Group medications by category
-  - Support for different dosage units and frequencies
+- 🎨 Beautiful UI with shadcn/ui components
+- 🌓 Light/dark mode + custom themes
+- 📱 Fully responsive design
+- 🔒 Secure authentication with NextAuth.js
+- 📊 Medication tracking and statistics
+- 📅 Calendar integration
+- 📧 Email notifications
+- 🚦 Rate limiting
+- 🔍 Error tracking with Sentry
+- ⚡ Real-time updates
+- 🧪 Comprehensive testing suite
 
-- 📊 **Statistics & History**
-  - View medication adherence rates
-  - Track dose history with detailed filters
-  - Export history to CSV
-  - Visual charts and analytics
+## Tech Stack
 
-- 👥 **Access Management**
-  - Share medication tracking with caregivers
-  - Granular permission controls
-  - Email notifications for shared access
-
-- ⚙️ **User Preferences**
-  - Customizable themes
-  - Timezone settings
-  - Notification preferences
-  - Accessibility options
-
-- 🔒 **Security & Validation**
-  - Email-based authentication
-  - Form validation with Zod
-  - Error boundaries for resilience
-  - Rate limiting for API protection
-
-## Technical Stack
-
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript
-- **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: NextAuth.js
-- **Styling**: Tailwind CSS
-- **Form Validation**: Zod
-- **Email**: Resend
-- **Rate Limiting**: Upstash Redis
-- **Testing**: Playwright for E2E tests
+- **Framework:** Next.js 14 (App Router)
+- **Language:** TypeScript
+- **Auth:** NextAuth.js
+- **Database:** PostgreSQL + Prisma
+- **UI Components:** shadcn/ui + Radix UI
+- **Styling:** Tailwind CSS
+- **Email:** React Email + Resend
+- **Charts:** Recharts
+- **Forms:** React Hook Form + Zod
+- **Testing:** Playwright + Jest
+- **Monitoring:** Sentry
+- **Rate Limiting:** Upstash Redis
 
 ## Getting Started
 
@@ -58,24 +44,34 @@ A comprehensive medication tracking application built with Next.js 14, TypeScrip
    npm install
    ```
 
-3. Set up environment variables:
+3. Copy the example environment file:
    ```bash
    cp .env.example .env.local
    ```
-   Fill in the required environment variables.
 
-4. Set up the database:
+4. Update the environment variables in `.env.local`
+
+5. Set up the database:
    ```bash
    npx prisma generate
    npx prisma db push
    ```
 
-5. Run the development server:
+6. Start the development server:
    ```bash
    npm run dev
    ```
 
+## Environment Variables
+
+Required environment variables are documented in `.env.example`. Make sure to set them up before running the application.
+
 ## Testing
+
+- Run unit tests:
+  ```bash
+  npm test
+  ```
 
 - Run E2E tests:
   ```bash
@@ -87,22 +83,59 @@ A comprehensive medication tracking application built with Next.js 14, TypeScrip
   npm run test:e2e:ui
   ```
 
-## Deployment
+## UI Components
 
-The application is designed to be deployed on Vercel:
+The application uses a comprehensive set of UI components from shadcn/ui and Radix UI:
 
-1. Push your code to GitHub
-2. Import the repository in Vercel
-3. Configure environment variables
-4. Deploy
+- Accordion
+- Alert Dialog
+- Avatar
+- Badge
+- Button
+- Calendar
+- Card
+- Checkbox
+- Command
+- Context Menu
+- Dialog
+- Dropdown Menu
+- Form
+- Hover Card
+- Input
+- Label
+- Menubar
+- Navigation Menu
+- Popover
+- Progress
+- Radio Group
+- Select
+- Separator
+- Sheet
+- Slider
+- Switch
+- Tabs
+- Toast
+- Toggle
+- Tooltip
+
+## Project Structure
+
+```
+.
+├── app/                # Next.js app router pages
+├── components/         # React components
+├── lib/               # Utility functions and shared logic
+├── prisma/            # Database schema and migrations
+├── public/            # Static assets
+├── styles/            # Global styles
+├── types/             # TypeScript type definitions
+├── e2e/               # End-to-end tests
+└── hooks/             # Custom React hooks
+```
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a pull request
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 

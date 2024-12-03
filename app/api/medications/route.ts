@@ -80,11 +80,16 @@ export async function GET(req: Request) {
           },
           take: 1,
         },
+        group: true,
+      },
+      orderBy: {
+        name: 'asc',
       },
     })
 
     return NextResponse.json(medications)
   } catch (error) {
+    console.error('Error fetching medications:', error)
     return new NextResponse("Internal error", { status: 500 })
   }
 }

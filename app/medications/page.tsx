@@ -7,9 +7,11 @@ import { AddMedicationButton } from "@/components/medications/add-medication-but
 import { Navigation } from "@/components/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { MedicationGroupWithMeds } from "@/types/medication"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 export default function MedicationsPage() {
   const [groups, setGroups] = useState<MedicationGroupWithMeds[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -17,6 +19,7 @@ export default function MedicationsPage() {
   }, [])
 
   async function fetchMedicationGroups() {
+    setIsLoading(true)
     try {
       const response = await fetch('/api/medications/groups')
       if (!response.ok) throw new Error('Failed to fetch medication groups')
@@ -28,6 +31,8 @@ export default function MedicationsPage() {
         description: "Failed to load medications",
         variant: "destructive",
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -39,7 +44,13 @@ export default function MedicationsPage() {
           <AddMedicationButton onSuccess={fetchMedicationGroups} />
         </div>
         <ErrorBoundary>
-          <MedicationList groups={groups} onUpdate={fetchMedicationGroups} />
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner />
+            </div>
+          ) : (
+            <MedicationList groups={groups} onUpdate={fetchMedicationGroups} />
+          )}
         </ErrorBoundary>
       </main>
       <Navigation />

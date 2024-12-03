@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Card } from "@/components/ui/card"
 import { Pill } from "lucide-react"
+import { Label } from "@/components/ui/label"
 
 export default function SignIn() {
   const [email, setEmail] = useState("")
@@ -58,7 +59,9 @@ export default function SignIn() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
             <Input
+              id="email"
               type="email"
               placeholder="Enter your email"
               value={email}
@@ -67,7 +70,7 @@ export default function SignIn() {
             />
           </div>
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Sending link..." : "Continue with Email"}
+            {isLoading ? "Sending link..." : "Sign in with Email"}
           </Button>
         </form>
       </Card>

@@ -3,11 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
-import { Resend } from 'resend'
-import { render } from '@react-email/render'
-import VerificationEmail from "@/components/emails/verification-email"
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { sendAccessInvitationEmail } from "@/lib/email"
 
 const grantAccessSchema = z.object({
   email: z.string().email(),
@@ -52,17 +48,7 @@ export async function POST(req: Request) {
 
       // Send invitation email
       const verificationUrl = new URL('/auth/signin', process.env.NEXTAUTH_URL)
-      const emailHtml = render(VerificationEmail({ 
-        url: verificationUrl.toString(),
-        appName: "MedTrack - Medication Access Invitation"
-      }))
-
-      await resend.emails.send({
-        from: `MedTrack <${process.env.EMAIL_FROM!}>`,
-        to: email,
-        subject: "You've been granted access to medications on MedTrack",
-        html: emailHtml,
-      })
+      await sendAccessInvitationEmail(email, verificationUrl.toString())
     }
 
     // Create access grants

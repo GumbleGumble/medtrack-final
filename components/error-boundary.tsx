@@ -1,56 +1,44 @@
 'use client'
 
-import React from 'react'
-import { Button } from '@/components/ui/button'
-import { AlertTriangle } from 'lucide-react'
+import { Component, ErrorInfo, ReactNode } from "react"
+import { AlertTriangle } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
-interface ErrorBoundaryProps {
-  children: React.ReactNode
-  fallback?: React.ReactNode
+interface Props {
+  children: ReactNode
+  fallback?: ReactNode
 }
 
-interface ErrorBoundaryState {
+interface State {
   hasError: boolean
   error?: Error
 }
 
-export class ErrorBoundary extends React.Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props)
-    this.state = { hasError: false }
+export class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  public static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error to an error reporting service
-    console.error('Error caught by boundary:', error, errorInfo)
+  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Uncaught error:', error, errorInfo)
   }
 
-  render() {
+  public render() {
     if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback
-      }
-
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] p-4">
-          <AlertTriangle className="w-12 h-12 text-destructive mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
-          <p className="text-muted-foreground mb-4 text-center max-w-md">
-            {this.state.error?.message || 
-              'An unexpected error occurred. Please try again later.'}
+      return this.props.fallback || (
+        <div className="flex flex-col items-center justify-center p-4 text-center">
+          <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+          <h3 className="font-medium text-lg mb-1">Something went wrong</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            {this.state.error?.message || 'An error occurred while displaying this content'}
           </p>
           <Button
-            onClick={() => {
-              this.setState({ hasError: false })
-              window.location.reload()
-            }}
+            variant="outline"
+            onClick={() => this.setState({ hasError: false })}
           >
             Try again
           </Button>
@@ -59,18 +47,5 @@ export class ErrorBoundary extends React.Component<
     }
 
     return this.props.children
-  }
-}
-
-export function withErrorBoundary<P extends object>(
-  Component: React.ComponentType<P>,
-  fallback?: React.ReactNode
-) {
-  return function WithErrorBoundary(props: P) {
-    return (
-      <ErrorBoundary fallback={fallback}>
-        <Component {...props} />
-      </ErrorBoundary>
-    )
   }
 } 

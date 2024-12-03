@@ -1,0 +1,49 @@
+[data-theme="blue-dawn"] {
+  --primary: hsl(217, 91%, 60%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(215, 20%, 65%);
+  --accent: hsl(215, 100%, 96%);
+  --background: hsl(220, 14%, 96%);
+  --foreground: hsl(215, 25%, 27%);
+  --destructive: hsl(0, 84%, 60%);
+}
+
+[data-theme="emerald-night"] {
+  --primary: hsl(152, 76%, 40%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(150, 14%, 65%);
+  --accent: hsl(150, 100%, 96%);
+  --background: hsl(155, 14%, 96%);
+  --foreground: hsl(150, 25%, 27%);
+  --destructive: hsl(0, 84%, 60%);
+}
+
+[data-theme="purple-dusk"] {
+  --primary: hsl(262, 83%, 58%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(260, 14%, 65%);
+  --accent: hsl(260, 100%, 96%);
+  --background: hsl(265, 14%, 96%);
+  --foreground: hsl(260, 25%, 27%);
+  --destructive: hsl(0, 84%, 60%);
+}
+
+[data-theme="rose-garden"] {
+  --primary: hsl(340, 82%, 52%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(340, 14%, 65%);
+  --accent: hsl(340, 100%, 96%);
+  --background: hsl(345, 14%, 96%);
+  --foreground: hsl(340, 25%, 27%);
+  --destructive: hsl(0, 84%, 60%);
+}
+
+[data-theme="sunset-orange"] {
+  --primary: hsl(24, 95%, 50%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(25, 14%, 65%);
+  --accent: hsl(25, 100%, 96%);
+  --background: hsl(30, 14%, 96%);
+  --foreground: hsl(25, 25%, 27%);
+  --destructive: hsl(0, 84%, 60%);
+} 

@@ -29,8 +29,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <style>
-          {themes.map((theme) => `
+        <style dangerouslySetInnerHTML={{ 
+          __html: themes.map((theme) => `
             [data-theme="${theme.name}"] {
               --primary: ${theme.colors.primary};
               --primary-foreground: ${theme.colors.primaryForeground};
@@ -40,8 +40,8 @@ export default function RootLayout({
               --foreground: ${theme.colors.foreground};
               --destructive: ${theme.colors.destructive};
             }
-          `).join("\n")}
-        </style>
+          `).join("\n")
+        }} />
       </head>
       <body className={inter.className}>
         <ThemeProvider

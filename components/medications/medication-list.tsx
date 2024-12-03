@@ -9,10 +9,11 @@ interface MedicationListProps {
 }
 
 export function MedicationList({ groups, onUpdate }: MedicationListProps) {
-  if (groups.length === 0) {
+  if (!groups || groups.length === 0) {
     return (
       <div className="text-center text-muted-foreground py-8">
-        No medications added yet. Click the + button to add your first medication.
+        <p>No medications added yet.</p>
+        <p className="text-sm mt-2">Click the + button above to add your first medication.</p>
       </div>
     )
   }

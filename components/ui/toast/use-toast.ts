@@ -1,8 +1,18 @@
-import { useCallback, useState } from "react"
-import type { ToastProps, UseToastReturn } from "./types"
+import { useState, useCallback } from "react"
+import type { ToastProps } from "./toast"
+
+interface Toast extends ToastProps {
+  id: string
+}
+
+interface UseToastReturn {
+  toasts: Toast[]
+  toast: (props: ToastProps) => void
+  dismiss: (id: string) => void
+}
 
 export function useToast(): UseToastReturn {
-  const [toasts, setToasts] = useState<(ToastProps & { id: string })[]>([])
+  const [toasts, setToasts] = useState<Toast[]>([])
 
   const toast = useCallback((props: ToastProps) => {
     const id = Math.random().toString(36).substr(2, 9)
@@ -14,4 +24,4 @@ export function useToast(): UseToastReturn {
   }, [])
 
   return { toasts, toast, dismiss }
-}
+} 
