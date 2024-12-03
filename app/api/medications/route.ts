@@ -38,11 +38,13 @@ export async function POST(req: Request) {
       return new NextResponse("Group not found", { status: 404 })
     }
 
+    // Create medication without groupId in the main data object
+    const { groupId, ...medicationData } = body
     const medication = await prisma.medication.create({
       data: {
-        ...body,
+        ...medicationData,
         group: {
-          connect: { id: body.groupId },
+          connect: { id: groupId },
         },
       },
     })

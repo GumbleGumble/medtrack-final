@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import Script from 'next/script'
+import { themes } from "@/lib/themes"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -27,9 +28,28 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head />
+      <head>
+        <style>
+          {themes.map((theme) => `
+            [data-theme="${theme.name}"] {
+              --primary: ${theme.colors.primary};
+              --primary-foreground: ${theme.colors.primaryForeground};
+              --secondary: ${theme.colors.secondary};
+              --accent: ${theme.colors.accent};
+              --background: ${theme.colors.background};
+              --foreground: ${theme.colors.foreground};
+              --destructive: ${theme.colors.destructive};
+            }
+          `).join("\n")}
+        </style>
+      </head>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider
+          attribute="data-theme"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           {children}
           <Toaster />
         </ThemeProvider>
