@@ -65,11 +65,12 @@ export async function POST(
       }
     }
 
-    // Create dose record with medicationId in the data object
+    // Create dose record with medicationId and recordedByUserId
     const doseRecord = await prisma.doseRecord.create({
       data: {
         ...body,
         medicationId: medication.id,
+        recordedByUserId: session.user.id,
       },
     })
 
