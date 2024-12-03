@@ -1,99 +1,109 @@
-# MedTrack - Medication Tracking Application
+# MedTrack
 
-A secure and user-friendly medication tracking application built with Next.js, PostgreSQL, and TypeScript.
+A comprehensive medication tracking application built with Next.js 14, TypeScript, and Prisma.
 
 ## Features
 
-- Medication tracking and scheduling
-- User authentication and authorization
-- Medication history and statistics
-- Secure data handling
-- Mobile-responsive design
+- 💊 **Medication Management**
+  - Add, edit, and delete medications
+  - Track doses with timestamps
+  - Group medications by category
+  - Support for different dosage units and frequencies
 
-## Prerequisites
+- 📊 **Statistics & History**
+  - View medication adherence rates
+  - Track dose history with detailed filters
+  - Export history to CSV
+  - Visual charts and analytics
 
-- Node.js 18+ 
-- PostgreSQL 14+
-- npm or yarn
+- 👥 **Access Management**
+  - Share medication tracking with caregivers
+  - Granular permission controls
+  - Email notifications for shared access
 
-## Local Development Setup
+- ⚙️ **User Preferences**
+  - Customizable themes
+  - Timezone settings
+  - Notification preferences
+  - Accessibility options
+
+- 🔒 **Security & Validation**
+  - Email-based authentication
+  - Form validation with Zod
+  - Error boundaries for resilience
+  - Rate limiting for API protection
+
+## Technical Stack
+
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: NextAuth.js
+- **Styling**: Tailwind CSS
+- **Form Validation**: Zod
+- **Email**: Resend
+- **Rate Limiting**: Upstash Redis
+- **Testing**: Playwright for E2E tests
+
+## Getting Started
 
 1. Clone the repository:
-
-```bash
-git clone https://github.com/yourusername/medtrack-final.git
-cd medtrack-final
-```
+   ```bash
+   git clone https://github.com/yourusername/medtrack.git
+   cd medtrack
+   ```
 
 2. Install dependencies:
-
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
 3. Set up environment variables:
-
-```bash
-cp .env.example .env.local
-```
-Edit `.env.local` with your configuration.
+   ```bash
+   cp .env.example .env.local
+   ```
+   Fill in the required environment variables.
 
 4. Set up the database:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
 
-```bash
-# Start PostgreSQL service
-# Create database
-npx prisma db push
-# Seed initial data (if available)
-npx prisma db seed
-```
+5. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-5. Start the development server:
+## Testing
 
-```bash
-npm run dev
-```
+- Run E2E tests:
+  ```bash
+  npm run test:e2e
+  ```
 
-## Production Deployment
+- Run E2E tests with UI:
+  ```bash
+  npm run test:e2e:ui
+  ```
 
-1. Set up production environment variables
-2. Build the application:
+## Deployment
 
-```bash
-npm run build
-```
+The application is designed to be deployed on Vercel:
 
-3. Start the production server:
+1. Push your code to GitHub
+2. Import the repository in Vercel
+3. Configure environment variables
+4. Deploy
 
-```bash
-npm start
-```
+## Contributing
 
-## Database Management
-
-- Migrations: `npx prisma migrate dev`
-- Reset Database: `npx prisma db reset`
-- View Data: `npx prisma studio`
-
-## Security Considerations
-
-- All API routes are protected with authentication
-- Environment variables are properly configured
-- CORS is configured for production
-- Rate limiting is implemented
-- Data is encrypted at rest
-
-## Monitoring and Maintenance
-
-- Regular database backups
-- Error logging with appropriate levels
-- Performance monitoring
-- Regular security updates
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a pull request
 
 ## License
 
-MIT License
-
-## Support
-
-For support, email support@yourdomain.com
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

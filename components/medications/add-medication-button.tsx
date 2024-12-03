@@ -11,7 +11,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -22,10 +21,41 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { useToast } from "@/components/ui/use-toast"
 import { MedicationGroupWithMeds } from "@/types/medication"
+import { Form, FormField, FormSection, FormSubmit } from "@/components/ui/form"
+import { z } from "zod"
 
 interface AddMedicationButtonProps {
   onSuccess: () => void
 }
+
+const medicationSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  dosage: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+    message: "Dosage must be a positive number",
+  }),
+  unit: z.enum(["mg", "ml", "pill"], {
+    errorMap: () => ({ message: "Please select a valid unit" }),
+  }),
+  frequency: z.enum(["daily", "twice_daily", "as_needed", "weekly"], {
+    errorMap: () => ({ message: "Please select a valid frequency" }),
+  }),
+  groupId: z.string().min(1, "Please select a medication group"),
+  isAsNeeded: z.coerce.boolean(),
+  minTimeBetweenDoses: z.union([
+    z.literal(""),
+    z.coerce.number().min(0, "Must be 0 or greater"),
+  ]).transform((val): number | null => val === "" ? null : val as number),
+}) satisfies z.ZodType<{
+  name: string
+  dosage: string
+  unit: "mg" | "ml" | "pill"
+  frequency: "daily" | "twice_daily" | "as_needed" | "weekly"
+  groupId: string
+  isAsNeeded: boolean
+  minTimeBetweenDoses: number | null
+}>
+
+type MedicationFormData = z.infer<typeof medicationSchema>
 
 export function AddMedicationButton({ onSuccess }: AddMedicationButtonProps) {
   const [open, setOpen] = useState(false)
@@ -48,31 +78,22 @@ export function AddMedicationButton({ onSuccess }: AddMedicationButtonProps) {
     }
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  async function handleSubmit(data: MedicationFormData) {
     setIsLoading(true)
-
-    const formData = new FormData(event.currentTarget)
-    const medicationData = {
-      name: formData.get("name"),
-      dosage: formData.get("dosage"),
-      unit: formData.get("unit"),
-      frequency: formData.get("frequency"),
-      groupId: formData.get("groupId"),
-      isAsNeeded: formData.get("isAsNeeded") === "on",
-      minTimeBetweenDoses: formData.get("minTimeBetweenDoses") 
-        ? parseInt(formData.get("minTimeBetweenDoses") as string) 
-        : null,
-    }
-
     try {
       const response = await fetch('/api/medications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(medicationData),
+        body: JSON.stringify(data),
       })
 
-      if (!response.ok) throw new Error('Failed to add medication')
+      if (!response.ok) {
+        const errorData = await response.json()
+        if (response.status === 422 && errorData.errors) {
+          throw new Error(JSON.stringify(errorData.errors))
+        }
+        throw new Error('Failed to add medication')
+      }
 
       toast({
         title: "Success",
@@ -81,11 +102,33 @@ export function AddMedicationButton({ onSuccess }: AddMedicationButtonProps) {
       setOpen(false)
       onSuccess()
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add medication",
-        variant: "destructive",
-      })
+      if (error instanceof Error && error.message.startsWith('{')) {
+        try {
+          const errors = JSON.parse(error.message) as Record<string, string[]>
+          Object.entries(errors).forEach(([field, messages]) => {
+            if (Array.isArray(messages) && messages.length > 0) {
+              toast({
+                title: "Validation Error",
+                description: messages[0],
+                variant: "destructive",
+              })
+            }
+          })
+        } catch {
+          toast({
+            title: "Error",
+            description: "Failed to add medication",
+            variant: "destructive",
+          })
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to add medication",
+          variant: "destructive",
+        })
+      }
+      throw error
     } finally {
       setIsLoading(false)
     }
@@ -97,7 +140,7 @@ export function AddMedicationButton({ onSuccess }: AddMedicationButtonProps) {
       if (isOpen) fetchGroups()
     }}>
       <DialogTrigger asChild>
-        <Button size="icon">
+        <Button size="icon" aria-label="Add medication">
           <Plus className="h-4 w-4" />
         </Button>
       </DialogTrigger>
@@ -105,84 +148,125 @@ export function AddMedicationButton({ onSuccess }: AddMedicationButtonProps) {
         <DialogHeader>
           <DialogTitle>Add Medication</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Medication Name</Label>
-            <Input id="name" name="name" required />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="dosage">Dosage</Label>
-              <Input id="dosage" name="dosage" type="number" step="0.1" required />
+        <Form
+          schema={medicationSchema}
+          onSubmit={handleSubmit}
+          onError={(error) => {
+            toast({
+              title: "Error",
+              description: error.message,
+              variant: "destructive",
+            })
+          }}
+        >
+          <FormSection>
+            <FormField
+              name="name"
+              label="Medication Name"
+              required
+              description="Enter the name of the medication"
+            >
+              <Input placeholder="e.g., Aspirin" />
+            </FormField>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                name="dosage"
+                label="Dosage"
+                required
+                description="Enter the amount per dose"
+              >
+                <Input type="number" step="0.1" min="0" />
+              </FormField>
+              
+              <FormField
+                name="unit"
+                label="Unit"
+                required
+                description="Select the unit of measurement"
+              >
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mg">mg</SelectItem>
+                    <SelectItem value="ml">ml</SelectItem>
+                    <SelectItem value="pill">pill(s)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="unit">Unit</Label>
-              <Select name="unit" required>
+
+            <FormField
+              name="frequency"
+              label="Frequency"
+              required
+              description="How often should this medication be taken?"
+            >
+              <Select>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select unit" />
+                  <SelectValue placeholder="Select frequency" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mg">mg</SelectItem>
-                  <SelectItem value="ml">ml</SelectItem>
-                  <SelectItem value="pill">pill(s)</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="twice_daily">Twice Daily</SelectItem>
+                  <SelectItem value="as_needed">As Needed</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-          </div>
+            </FormField>
 
-          <div className="space-y-2">
-            <Label htmlFor="frequency">Frequency</Label>
-            <Select name="frequency" required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select frequency" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="twice_daily">Twice Daily</SelectItem>
-                <SelectItem value="as_needed">As Needed</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <FormField
+              name="groupId"
+              label="Group"
+              required
+              description="Select which group this medication belongs to"
+            >
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select group" />
+                </SelectTrigger>
+                <SelectContent>
+                  {groups.map((group) => (
+                    <SelectItem key={group.id} value={group.id}>
+                      {group.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
 
-          <div className="space-y-2">
-            <Label htmlFor="groupId">Group</Label>
-            <Select name="groupId" required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select group" />
-              </SelectTrigger>
-              <SelectContent>
-                {groups.map((group) => (
-                  <SelectItem key={group.id} value={group.id}>
-                    {group.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+            <FormField
+              name="isAsNeeded"
+              label="Take as needed"
+              description="Enable if this medication is taken only when needed"
+            >
+              <Switch />
+            </FormField>
 
-          <div className="flex items-center justify-between">
-            <Label htmlFor="isAsNeeded">Take as needed</Label>
-            <Switch id="isAsNeeded" name="isAsNeeded" />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="minTimeBetweenDoses">
-              Minimum time between doses (minutes)
-            </Label>
-            <Input
-              id="minTimeBetweenDoses"
+            <FormField
               name="minTimeBetweenDoses"
-              type="number"
-              min="0"
-            />
-          </div>
+              label="Minimum time between doses"
+              description="Optional: Set a minimum waiting time between doses (in minutes)"
+            >
+              <Input
+                type="number"
+                min="0"
+                placeholder="e.g., 240 for 4 hours"
+              />
+            </FormField>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Adding..." : "Add Medication"}
-          </Button>
-        </form>
+            <FormSubmit
+              disabled={isLoading}
+              isSubmitting={isLoading}
+              submittingText="Adding Medication..."
+              className="w-full"
+            >
+              Add Medication
+            </FormSubmit>
+          </FormSection>
+        </Form>
       </DialogContent>
     </Dialog>
   )

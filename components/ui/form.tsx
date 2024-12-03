@@ -1,176 +1,189 @@
-import * as React from "react"
-import * as LabelPrimitive from "@radix-ui/react-label"
-import { Slot } from "@radix-ui/react-slot"
-import {
-  Controller,
-  ControllerProps,
-  FieldPath,
-  FieldValues,
-  FormProvider,
-  useFormContext,
-} from "react-hook-form"
+"use client"
 
+import * as React from "react"
+import { useFormValidation } from "@/lib/hooks/use-form-validation"
+import { FormError, FormFieldError, FormErrorSummary } from "@/components/ui/form-error"
+import { z } from "zod"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { ErrorData } from "@/components/ui/error-data"
 
-const Form = FormProvider
-
-type FormFieldContextValue<
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
-> = {
-  name: TName
+interface FormProps<T extends z.ZodType> {
+  schema: T
+  onSubmit: (data: z.infer<T>) => Promise<void>
+  onError?: (error: Error) => void
+  children: React.ReactNode
+  className?: string
+  id?: string
+  name?: string
 }
 
-const FormFieldContext = React.createContext<FormFieldContextValue>(
-  {} as FormFieldContextValue
-)
-
-const FormField = <
-  TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
->({
+export function Form<T extends z.ZodType>({
+  schema,
+  onSubmit,
+  onError,
+  children,
+  className,
   ...props
-}: ControllerProps<TFieldValues, TName>) => {
+}: FormProps<T>) {
+  const {
+    errors,
+    isSubmitting,
+    validateForm,
+    clearErrors,
+  } = useFormValidation({
+    schema,
+    onSubmit,
+    onError,
+  })
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
+    const data = Object.fromEntries(formData)
+    
+    try {
+      await validateForm(data)
+    } catch (error) {
+      // Error is already handled by the validation hook
+      return
+    }
+  }
+
   return (
-    <FormFieldContext.Provider value={{ name: props.name }}>
-      <Controller {...props} />
-    </FormFieldContext.Provider>
+    <ErrorData
+      title="Form Error"
+      description="An error occurred while processing the form"
+      showCard={false}
+    >
+      <form
+        {...props}
+        onSubmit={handleSubmit}
+        className={cn("space-y-4", className)}
+        noValidate // We handle validation ourselves
+      >
+        <div
+          role="alert"
+          aria-live="polite"
+        >
+          <FormErrorSummary 
+            errors={errors} 
+            className="mb-4"
+          />
+        </div>
+        {children}
+      </form>
+    </ErrorData>
   )
 }
 
-const useFormField = () => {
-  const fieldContext = React.useContext(FormFieldContext)
-  const itemContext = React.useContext(FormItemContext)
-  const { getFieldState, formState } = useFormContext()
-
-  const fieldState = getFieldState(fieldContext.name, formState)
-
-  if (!fieldContext) {
-    throw new Error("useFormField should be used within <FormField>")
-  }
-
-  const { id } = itemContext
-
-  return {
-    id,
-    name: fieldContext.name,
-    formItemId: `${id}-form-item`,
-    formDescriptionId: `${id}-form-item-description`,
-    formMessageId: `${id}-form-item-message`,
-    ...fieldState,
-  }
+interface FormFieldProps {
+  name: string
+  label: string
+  children: React.ReactNode
+  errors?: Record<string, string[]>
+  className?: string
+  required?: boolean
+  description?: string
 }
 
-type FormItemContextValue = {
-  id: string
-}
-
-const FormItemContext = React.createContext<FormItemContextValue>(
-  {} as FormItemContextValue
-)
-
-const FormItem = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
+export function FormField({
+  name,
+  label,
+  children,
+  errors,
+  className,
+  required,
+  description,
+}: FormFieldProps) {
   const id = React.useId()
+  const descriptionId = description ? `${id}-description` : undefined
+  const errorId = errors?.[name] ? `${id}-error` : undefined
 
   return (
-    <FormItemContext.Provider value={{ id }}>
-      <div ref={ref} className={cn("space-y-2", className)} {...props} />
-    </FormItemContext.Provider>
+    <div className={cn("space-y-2", className)}>
+      <Label
+        htmlFor={id}
+        className={cn(required && "after:content-['*'] after:ml-1 after:text-destructive")}
+      >
+        {label}
+      </Label>
+      {description && (
+        <p
+          id={descriptionId}
+          className="text-sm text-muted-foreground"
+        >
+          {description}
+        </p>
+      )}
+      {React.cloneElement(children as React.ReactElement, {
+        id,
+        name,
+        'aria-describedby': cn(descriptionId, errorId),
+        'aria-required': required,
+        'aria-invalid': !!errors?.[name],
+      })}
+      <div role="alert" aria-live="polite">
+        <FormFieldError
+          name={name}
+          errors={errors}
+        />
+      </div>
+    </div>
   )
-})
-FormItem.displayName = "FormItem"
+}
 
-const FormLabel = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => {
-  const { error, formItemId } = useFormField()
+interface FormSubmitProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'type'> {
+  isSubmitting?: boolean
+  submittingText?: string
+  children: React.ReactNode
+}
 
+export function FormSubmit({
+  isSubmitting,
+  submittingText = "Submitting...",
+  children,
+  disabled,
+  ...props
+}: FormSubmitProps) {
   return (
-    <Label
-      ref={ref}
-      className={cn(error && "text-destructive", className)}
-      htmlFor={formItemId}
-      {...props}
-    />
-  )
-})
-FormLabel.displayName = "FormLabel"
-
-const FormControl = React.forwardRef<
-  React.ElementRef<typeof Slot>,
-  React.ComponentPropsWithoutRef<typeof Slot>
->(({ ...props }, ref) => {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
-
-  return (
-    <Slot
-      ref={ref}
-      id={formItemId}
-      aria-describedby={
-        !error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
-      }
-      aria-invalid={!!error}
-      {...props}
-    />
-  )
-})
-FormControl.displayName = "FormControl"
-
-const FormDescription = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => {
-  const { formDescriptionId } = useFormField()
-
-  return (
-    <p
-      ref={ref}
-      id={formDescriptionId}
-      className={cn("text-sm text-muted-foreground", className)}
-      {...props}
-    />
-  )
-})
-FormDescription.displayName = "FormDescription"
-
-const FormMessage = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, children, ...props }, ref) => {
-  const { error, formMessageId } = useFormField()
-  const body = error ? String(error?.message) : children
-
-  if (!body) {
-    return null
-  }
-
-  return (
-    <p
-      ref={ref}
-      id={formMessageId}
-      className={cn("text-sm font-medium text-destructive", className)}
+    <button
+      type="submit"
+      disabled={isSubmitting || disabled}
+      aria-disabled={isSubmitting || disabled}
       {...props}
     >
-      {body}
-    </p>
+      {isSubmitting ? submittingText : children}
+    </button>
   )
-})
-FormMessage.displayName = "FormMessage"
+}
 
-export {
-  useFormField,
-  Form,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-  FormMessage,
-  FormField,
+interface FormSectionProps {
+  title?: string
+  description?: string
+  children: React.ReactNode
+  className?: string
+}
+
+export function FormSection({
+  title,
+  description,
+  children,
+  className,
+}: FormSectionProps) {
+  return (
+    <div className={cn("space-y-4", className)}>
+      {title && (
+        <div className="space-y-1">
+          <h3 className="text-lg font-medium">{title}</h3>
+          {description && (
+            <p className="text-sm text-muted-foreground">
+              {description}
+            </p>
+          )}
+        </div>
+      )}
+      {children}
+    </div>
+  )
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { ErrorBoundary } from '@/components/error-boundary'
 import { StatsDashboard } from "@/components/stats/stats-dashboard"
 import { Navigation } from "@/components/navigation"
 import { useToast } from "@/components/ui/use-toast"
@@ -32,7 +33,9 @@ export default function StatsPage() {
   return (
     <div className="min-h-screen bg-background">
       <main className="container max-w-4xl mx-auto p-4 pb-20">
-        <StatsDashboard medications={medications} />
+        <ErrorBoundary>
+          <StatsDashboard medications={medications} />
+        </ErrorBoundary>
       </main>
       <Navigation />
     </div>

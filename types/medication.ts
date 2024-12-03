@@ -38,11 +38,15 @@ export interface HistoryFilters {
   startDate: Date
   endDate: Date
   medicationIds: string[]
+  groupIds: string[]
   includeSkipped: boolean
-  search?: string
-  groupIds?: string[]
-  status?: 'taken' | 'skipped' | 'all'
-  timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night' | 'all'
+  status: 'taken' | 'skipped' | 'all'
+  timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night' | 'all'
+  search: string
+  page: number
+  limit: number
+  sortField: 'timestamp' | 'medicationName' | 'dosage' | 'status'
+  sortDirection: 'asc' | 'desc'
 }
 
 export interface HistoryResponse {

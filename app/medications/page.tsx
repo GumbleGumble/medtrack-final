@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { ErrorBoundary } from '@/components/error-boundary'
 import { MedicationList } from "@/components/medications/medication-list"
 import { AddMedicationButton } from "@/components/medications/add-medication-button"
 import { Navigation } from "@/components/navigation"
@@ -37,7 +38,9 @@ export default function MedicationsPage() {
           <h1 className="text-2xl font-semibold">Medications</h1>
           <AddMedicationButton onSuccess={fetchMedicationGroups} />
         </div>
-        <MedicationList groups={groups} onUpdate={fetchMedicationGroups} />
+        <ErrorBoundary>
+          <MedicationList groups={groups} onUpdate={fetchMedicationGroups} />
+        </ErrorBoundary>
       </main>
       <Navigation />
     </div>

@@ -1,15 +1,31 @@
-import { PrismaAdapter } from "@prisma/client/runtime/library"
+import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { NextAuthOptions } from "next-auth"
 import EmailProvider from "next-auth/providers/email"
 import { prisma } from "./prisma"
 import { Resend } from 'resend'
 import { render } from '@react-email/render'
 import VerificationEmail from "@/components/emails/verification-email"
+import { Adapter } from "next-auth/adapters"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+// Extend PrismaAdapter to include user preferences creation
+const extendedPrismaAdapter = Object.assign(PrismaAdapter(prisma), {
+  createUser: async (data: any) => {
+    const user = await prisma.user.create({
+      data: {
+        ...data,
+        preferences: {
+          create: {} // Creates default preferences
+        }
+      }
+    })
+    return user
+  }
+}) as Adapter
+
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: extendedPrismaAdapter,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -18,14 +34,14 @@ export const authOptions: NextAuthOptions = {
   providers: [
     EmailProvider({
       async sendVerificationRequest({ identifier, url }) {
-        const emailHtml = await render(VerificationEmail({ url }))
+        const emailHtml = render(VerificationEmail({ url }))
         
         try {
           await resend.emails.send({
             from: `MedTrack <${process.env.EMAIL_FROM!}>`,
             to: identifier,
             subject: "Verify your email for MedTrack",
-            html: emailHtml,
+            html: emailHtml.toString(),
           })
         } catch (error) {
           console.error('Failed to send verification email:', error)
@@ -67,16 +83,6 @@ export const authOptions: NextAuthOptions = {
         token.emailVerified = user.emailVerified
       }
       return token
-    },
-  },
-  events: {
-    async createUser({ user }) {
-      // Create default preferences
-      await prisma.userPreferences.create({
-        data: {
-          userId: user.id,
-        },
-      })
     },
   },
 }

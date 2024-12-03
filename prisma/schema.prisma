@@ -7,35 +7,73 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model User {
   id            String       @id @default(cuid())
-  primaryEmail  String       @unique
+  primaryEmail  String      @unique
   emailVerified DateTime?
   lastLogin     DateTime?
-  createdAt     DateTime     @default(now())
+  createdAt     DateTime    @default(now())
+  accounts      Account[]
+  sessions      Session[]
   groups        MedicationGroup[]
   accessGranted UserAccess[] @relation("AccessGrantedTo")
   accessOwned   UserAccess[] @relation("AccessGrantedBy")
   preferences   UserPreferences?
+  doseRecords   DoseRecord[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model UserPreferences {
-  id                    String   @id @default(cuid())
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId                String   @unique
-  theme                 String   @default("system") // system, light, dark, or custom themes
-  timezone             String   @default("UTC")
-  emailNotifications    Boolean  @default(true)
-  pushNotifications     Boolean  @default(false)
-  reminderTime         Int      @default(9) // Hour of day (0-23) for daily reminders
-  reminderBuffer       Int      @default(30) // Minutes before scheduled time to send reminder
-  soundEnabled         Boolean  @default(true)
-  vibrationEnabled     Boolean  @default(true)
-  colorScheme          String   @default("blue") // blue, green, purple, etc.
-  fontSize             String   @default("medium") // small, medium, large
-  useHighContrast      Boolean  @default(false)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                String   @id @default(cuid())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String   @unique
+  theme             String   @default("system") // system, light, dark, or custom themes
+  timezone          String   @default("UTC")
+  emailNotifications Boolean  @default(true)
+  pushNotifications Boolean  @default(false)
+  reminderTime      Int      @default(9) // Hour of day (0-23) for daily reminders
+  reminderBuffer    Int      @default(30) // Minutes before scheduled time to send reminder
+  soundEnabled      Boolean  @default(true)
+  vibrationEnabled  Boolean  @default(true)
+  colorScheme       String   @default("blue") // blue, green, purple, etc.
+  fontSize          String   @default("medium") // small, medium, large
+  useHighContrast   Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model UserAccess {
@@ -64,23 +102,25 @@ model MedicationGroup {
 }
 
 model Medication {
-  id                 String       @id @default(cuid())
-  name               String
-  dosage             String
-  unit               String
-  frequency          String
-  isAsNeeded         Boolean      @default(false)
+  id                  String       @id @default(cuid())
+  name                String
+  dosage              String
+  unit                String
+  frequency           String
+  isAsNeeded          Boolean      @default(false)
   minTimeBetweenDoses Int?
-  doseRecords        DoseRecord[]
-  group             MedicationGroup @relation(fields: [groupId], references: [id])
-  groupId           String
+  doseRecords         DoseRecord[]
+  group              MedicationGroup @relation(fields: [groupId], references: [id])
+  groupId            String
 }
 
 model DoseRecord {
-  id           String     @id @default(cuid())
-  medicationId String
-  timestamp    DateTime
-  notes        String?
-  skipped      Boolean    @default(false)
-  medication   Medication @relation(fields: [medicationId], references: [id])
+  id              String     @id @default(cuid())
+  medicationId    String
+  timestamp       DateTime
+  notes           String?
+  skipped         Boolean    @default(false)
+  recordedByUserId String
+  medication      Medication @relation(fields: [medicationId], references: [id])
+  recordedBy      User      @relation(fields: [recordedByUserId], references: [id])
 }
