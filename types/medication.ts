@@ -1,10 +1,10 @@
 import { Medication, MedicationGroup, DoseRecord } from '@prisma/client'
 
-export type MedicationWithDoses = Medication & {
-  doseRecords: DoseRecord[]
+export interface MedicationWithDoses extends Medication {
+  doseRecords?: DoseRecord[]
 }
 
-export type MedicationGroupWithMeds = MedicationGroup & {
+export interface MedicationGroupWithMeds extends MedicationGroup {
   medications: MedicationWithDoses[]
 }
 

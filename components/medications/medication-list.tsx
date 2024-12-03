@@ -1,8 +1,7 @@
 "use client"
 
+import { MedicationCard } from "./medication-card"
 import { MedicationGroupWithMeds } from "@/types/medication"
-import { MedicationGroup } from "./medication-group"
-import { AddGroupButton } from "./add-group-button"
 
 interface MedicationListProps {
   groups: MedicationGroupWithMeds[]
@@ -12,26 +11,34 @@ interface MedicationListProps {
 export function MedicationList({ groups, onUpdate }: MedicationListProps) {
   if (groups.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">No medication groups yet.</p>
-        <p className="text-sm text-muted-foreground mt-1 mb-6">
-          Create a group to start adding medications.
-        </p>
-        <AddGroupButton onSuccess={onUpdate} />
+      <div className="text-center text-muted-foreground py-8">
+        No medications added yet. Click the + button to add your first medication.
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       {groups.map((group) => (
-        <MedicationGroup
-          key={group.id}
-          group={group}
-          onUpdate={onUpdate}
-        />
+        <div key={group.id}>
+          <div className="flex items-center space-x-2 mb-4">
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: group.color }}
+            />
+            <h2 className="text-lg font-medium">{group.name}</h2>
+          </div>
+          <div className="grid gap-4">
+            {group.medications.map((medication) => (
+              <MedicationCard
+                key={medication.id}
+                medication={medication}
+                onUpdate={onUpdate}
+              />
+            ))}
+          </div>
+        </div>
       ))}
-      <AddGroupButton onSuccess={onUpdate} />
     </div>
   )
 }
