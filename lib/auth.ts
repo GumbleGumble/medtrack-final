@@ -35,6 +35,12 @@ interface EmailParams {
   url: string
 }
 
+interface UserPreferences {
+  theme: string
+  emailNotifications: boolean
+  pushNotifications: boolean
+}
+
 const emailConfig = {
   host: process.env.EMAIL_SERVER_HOST,
   port: Number(process.env.EMAIL_SERVER_PORT),
@@ -49,6 +55,12 @@ const transporter = createTransport(emailConfig)
 const customAdapter: Adapter = {
   ...PrismaAdapter(prisma),
   createUser: async (data: UserData): Promise<AdapterUser> => {
+    const preferences: UserPreferences = {
+      theme: 'system',
+      emailNotifications: true,
+      pushNotifications: false
+    }
+
     const user = await prisma.user.create({
       data: {
         primaryEmail: data.email,
@@ -56,11 +68,7 @@ const customAdapter: Adapter = {
         emailVerified: data.emailVerified,
         name: data.name,
         preferences: {
-          create: {
-            theme: 'system',
-            emailNotifications: true,
-            pushNotifications: false
-          }
+          create: preferences
         }
       }
     })
