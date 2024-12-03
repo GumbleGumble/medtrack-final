@@ -15,21 +15,6 @@ interface VerificationRequest {
   }
 }
 
-interface UserData extends Partial<AdapterUser> {
-  email: string
-  emailVerified?: Date | null
-  name?: string | null
-}
-
-interface EmailServerConfig {
-  host: string
-  port: number
-  auth: {
-    user: string
-    pass: string
-  }
-}
-
 interface EmailParams {
   identifier: string
   url: string
@@ -39,6 +24,16 @@ interface UserPreferences {
   theme: string
   emailNotifications: boolean
   pushNotifications: boolean
+}
+
+interface UserCreateInput {
+  email: string
+  primaryEmail: string
+  emailVerified?: Date | null
+  name?: string | null
+  preferences: {
+    create: UserPreferences
+  }
 }
 
 const emailConfig = {
@@ -61,17 +56,17 @@ const customAdapter: Adapter = {
       pushNotifications: false
     }
 
-    const user = await prisma.user.create({
-      data: {
-        primaryEmail: data.email,
-        email: data.email,
-        emailVerified: data.emailVerified,
-        name: data.name,
-        preferences: {
-          create: preferences
-        }
+    const createData: UserCreateInput = {
+      email: data.email,
+      primaryEmail: data.email,
+      emailVerified: data.emailVerified,
+      name: data.name,
+      preferences: {
+        create: preferences
       }
-    })
+    }
+
+    const user = await prisma.user.create({ data: createData })
     
     const adapterUser: AdapterUser = {
       id: user.id,
